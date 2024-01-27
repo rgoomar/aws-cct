@@ -1,5 +1,7 @@
 name: goreleaser
 
+permissions: write-all
+
 on:
   push:
     tags:
