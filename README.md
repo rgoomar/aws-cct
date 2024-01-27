@@ -18,7 +18,7 @@ This is a simple CLI tool that wraps the AWS Cost Explorer APIs to be able to qu
 ### Homebrew
 
 ```bash
-brew tap rgoomar/aws-cct
+brew tap rgoomar/aws-cct https://github.com/rgoomar/aws-cct
 brew install aws-cct
 ```
 
