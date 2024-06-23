@@ -10,9 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/costexplorer"
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
+	ceTypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/leekchan/accounting"
@@ -86,8 +89,14 @@ func main() {
 		},
 		Action: func(c *cli.Context) error {
 			ac := accounting.DefaultAccounting("$", 2)
-			sess, _ := session.NewSession()
-			svc := costexplorer.New(sess)
+			ctx := context.TODO()
+			cfg, err := config.LoadDefaultConfig(ctx)
+			if err != nil {
+				// handle error
+				fmt.Println("error:", err)
+				os.Exit(1)
+			}
+			svc := costexplorer.NewFromConfig(cfg)
 
 			start, _ := time.Parse(dateFormat, firstMonthStart)
 			firstMonthEnd := start.AddDate(0, 1, 0).Format(dateFormat)
@@ -114,8 +123,8 @@ func main() {
 
 			tagFilters := c.StringSlice("tag")
 
-			firstResultsCosts := GetCosts(svc, firstMonthStart, firstMonthEnd, costMetric, grouping, serviceFilter, tagFilters)
-			secondResultsCosts := GetCosts(svc, secondMonthStart, secondMonthEnd, costMetric, grouping, serviceFilter, tagFilters)
+			firstResultsCosts := GetCosts(ctx, svc, firstMonthStart, firstMonthEnd, costMetric, grouping, serviceFilter, tagFilters)
+			secondResultsCosts := GetCosts(ctx, svc, secondMonthStart, secondMonthEnd, costMetric, grouping, serviceFilter, tagFilters)
 			allServiceNames := ExtractAllServiceNames(firstResultsCosts, secondResultsCosts)
 
 			type ServiceCosts struct {
@@ -239,9 +248,9 @@ func ExtractAllServiceNames(firstResultsCosts map[string]float64, secondResultsC
 	return allServiceNames
 }
 
-func GetCosts(svc *costexplorer.CostExplorer, start string, end string, costmetric string, grouping string, serviceFilter string, tagFilters []string) map[string]float64 {
+func GetCosts(ctx context.Context, svc *costexplorer.Client, start string, end string, costmetric string, grouping string, serviceFilter string, tagFilters []string) map[string]float64 {
 	// Assemble filters
-	var filters []*costexplorer.Expression
+	var filters []ceTypes.Expression
 	if len(tagFilters) > 0 {
 		for _, tagFilter := range tagFilters {
 			tagParts := strings.SplitN(tagFilter, "=", 2)
@@ -253,41 +262,37 @@ func GetCosts(svc *costexplorer.CostExplorer, start string, end string, costmetr
 	if serviceFilter != "" {
 		filters = append(filters, GetDimensionExpression("SERVICE", serviceFilter))
 	}
-	var filter *costexplorer.Expression
+	var filter *ceTypes.Expression
 	if len(filters) > 1 {
-		filter = &costexplorer.Expression{
+		filter = &ceTypes.Expression{
 			And: filters,
 		}
 	} else if len(filters) == 1 {
-		filter = filters[0]
+		filter = &filters[0]
 	}
 
 	costInput := &costexplorer.GetCostAndUsageInput{
 		Filter:      filter,
-		Granularity: aws.String("MONTHLY"),
-		GroupBy: []*costexplorer.GroupDefinition{
+		Granularity: ceTypes.GranularityMonthly,
+		GroupBy: []ceTypes.GroupDefinition{
 			{
-				Type: aws.String("DIMENSION"),
+				Type: ceTypes.GroupDefinitionTypeDimension,
 				Key:  aws.String(grouping),
 			},
 		},
-		Metrics: []*string{
-			aws.String(costmetric),
-		},
-		TimePeriod: &costexplorer.DateInterval{
+		Metrics: []string{costmetric},
+		TimePeriod: &ceTypes.DateInterval{
 			Start: aws.String(start),
 			End:   aws.String(end),
 		},
 	}
 
-	req, resp := svc.GetCostAndUsageRequest(costInput)
-
-	err := req.Send()
+	resp, err := svc.GetCostAndUsage(ctx, costInput)
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	resultsCosts := make(map[string]float64)
+	var resultsCosts map[string]float64
+	resultsCosts = make(map[string]float64)
 
 	for _, results := range resp.ResultsByTime {
 		for _, groups := range results.Groups {
@@ -299,27 +304,27 @@ func GetCosts(svc *costexplorer.CostExplorer, start string, end string, costmetr
 				if err != nil {
 					fmt.Println(err)
 				}
-				resultsCosts[*groups.Keys[0]] = amount
+				resultsCosts[groups.Keys[0]] = amount
 			}
 		}
 	}
 	return resultsCosts
 }
 
-func GetTagExpression(tag string, value string) *costexplorer.Expression {
-	return &costexplorer.Expression{
-		Tags: &costexplorer.TagValues{
+func GetTagExpression(tag string, value string) ceTypes.Expression {
+	return ceTypes.Expression{
+		Tags: &ceTypes.TagValues{
 			Key:    aws.String(tag),
-			Values: aws.StringSlice([]string{value}),
+			Values: []string{value},
 		},
 	}
 }
 
-func GetDimensionExpression(dimension string, value string) *costexplorer.Expression {
-	return &costexplorer.Expression{
-		Dimensions: &costexplorer.DimensionValues{
-			Key:    aws.String(dimension),
-			Values: aws.StringSlice([]string{value}),
+func GetDimensionExpression(dimension string, value string) ceTypes.Expression {
+	return ceTypes.Expression{
+		Dimensions: &ceTypes.DimensionValues{
+			Key:    ceTypes.Dimension(dimension),
+			Values: []string{value},
 		},
 	}
 }
