@@ -13,8 +13,7 @@ builds:
     goos:
       - linux
       - darwin
-    dir: .
-    main: ./cmd/aws-cct
+    dir: cmd/aws-cct
     binary: aws-cct
 
 archives:
