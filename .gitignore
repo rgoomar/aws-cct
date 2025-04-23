@@ -1,3 +1,2 @@
-aws-cct
-build/# Added by goreleaser init:
+build/
 dist/
