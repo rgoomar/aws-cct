@@ -13,7 +13,8 @@ builds:
     goos:
       - linux
       - darwin
-    dir: cmd/aws-cct
+    dir: .
+    main: ./cmd/aws-cct
     binary: aws-cct
 
 archives:
@@ -28,9 +29,6 @@ archives:
 
 checksum:
   name_template: 'checksums.txt'
-
-snapshot:
-  name_template: "{{ .Tag }}-next"
 
 changelog:
   sort: asc
