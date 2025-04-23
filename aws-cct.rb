@@ -5,21 +5,21 @@
 class AwsCct < Formula
   desc "AWS Cost Comparison Tool"
   homepage "https://github.com/rgoomar/aws-cct"
-  version "2.1.1"
+  version "2.2.4"
   license "MIT"
 
   on_macos do
-    on_intel do
-      url "https://github.com/rgoomar/aws-cct/releases/download/v2.1.1/aws-cct_2.1.1_darwin_amd64.tar.gz"
-      sha256 "351e56084888417e474a4b792f4ab5e2d63945454d454f88b6d89e4f80a82d17"
+    if Hardware::CPU.intel?
+      url "https://github.com/rgoomar/aws-cct/releases/download/v2.2.4/aws-cct_Darwin_x86_64.tar.gz"
+      sha256 "813242173b30d47617185e296dab3a2aee664e5770402bd015af1bd685e1f2e6"
 
       def install
         bin.install "aws-cct"
       end
     end
-    on_arm do
-      url "https://github.com/rgoomar/aws-cct/releases/download/v2.1.1/aws-cct_2.1.1_darwin_arm64.tar.gz"
-      sha256 "8623f2a392eddea6b61d57b5684d356c135f7ae07c5f611b3b740104040ebf0a"
+    if Hardware::CPU.arm?
+      url "https://github.com/rgoomar/aws-cct/releases/download/v2.2.4/aws-cct_Darwin_arm64.tar.gz"
+      sha256 "646f338ffc71b7bceed380b3036adbbf1805944cfd7221e56d9de9b788d9c9b4"
 
       def install
         bin.install "aws-cct"
@@ -28,20 +28,20 @@ class AwsCct < Formula
   end
 
   on_linux do
-    on_intel do
+    if Hardware::CPU.intel?
       if Hardware::CPU.is_64_bit?
-        url "https://github.com/rgoomar/aws-cct/releases/download/v2.1.1/aws-cct_2.1.1_linux_amd64.tar.gz"
-        sha256 "7ec51535e41620c0a36deb76f493280c0768da09e171db890fa0fa5eb8fcc566"
+        url "https://github.com/rgoomar/aws-cct/releases/download/v2.2.4/aws-cct_Linux_x86_64.tar.gz"
+        sha256 "0a938530446d2d2f30237cd1920b48e60bc6f3d85e96d8cd1796db8ce6a00fc5"
 
         def install
           bin.install "aws-cct"
         end
       end
     end
-    on_arm do
+    if Hardware::CPU.arm?
       if Hardware::CPU.is_64_bit?
-        url "https://github.com/rgoomar/aws-cct/releases/download/v2.1.1/aws-cct_2.1.1_linux_arm64.tar.gz"
-        sha256 "d23a28e4afdadab4559a59325896b067571c3508536e87985b71c07eb09e3b22"
+        url "https://github.com/rgoomar/aws-cct/releases/download/v2.2.4/aws-cct_Linux_arm64.tar.gz"
+        sha256 "34e5e00def90b34031b1cbece917fc7d2c8b9ab8313ca0a9bef9d94911ef24d9"
 
         def install
           bin.install "aws-cct"
