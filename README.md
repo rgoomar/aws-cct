@@ -125,14 +125,49 @@ This will output in a CSV friendly format and you can utilize this to do analysi
 aws-cct --output csv
 ```
 
-
 ## Local Development
 
 Requires Go >= 1.21
 
-Build with `go build`
+### Project Structure
+```
+.
+├── cmd/aws-cct/     # Main application entry point
+├── pkg/
+│   ├── costexplorer/ # AWS Cost Explorer client
+│   ├── display/      # Output formatting
+│   └── models/       # Data models
+└── build/           # Build artifacts
+```
 
-You should see a local binary called `aws-cct` which you can use to interact with
+### Available Make Commands
+
+- `make build` - Build the application
+- `make test` - Run tests
+- `make test-coverage` - Run tests with coverage report
+- `make lint` - Run linter
+- `make fmt` - Format code
+- `make clean` - Clean build artifacts
+- `make deps` - Install dependencies
+
+### Getting Started
+
+1. Install dependencies:
+   ```bash
+   make deps
+   ```
+
+2. Build the application:
+   ```bash
+   make build
+   ```
+
+3. Run tests:
+   ```bash
+   make test
+   ```
+
+The binary will be available in the `build` directory.
 
 ## License
 

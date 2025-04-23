@@ -1,21 +1,37 @@
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+
 before:
   hooks:
-    - go mod download
+    - go mod tidy
+
 project_name: aws-cct
+
 builds:
   - env:
       - CGO_ENABLED=0
     goos:
       - linux
       - darwin
-    ignore:
-      - goos: darwin
-        goarch: 386
+    dir: cmd/aws-cct
+    binary: aws-cct
+
+archives:
+  - formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
 checksum:
   name_template: 'checksums.txt'
+
 snapshot:
   name_template: "{{ .Tag }}-next"
+
 changelog:
   sort: asc
   filters:
@@ -23,12 +39,25 @@ changelog:
       - '^docs:'
       - '^test:'
       - '^Brew formula'
+
 brews:
-- tap:
-    owner: rgoomar
-    name: aws-cct
-  description: AWS Cost Comparison Tool
-  homepage: https://github.com/rgoomar/aws-cct
-  license: "MIT"
-  test: |
-    system "#{bin}/aws-cct --help"
+  - name: aws-cct
+    repository:
+      owner: rgoomar
+      name: aws-cct
+      branch: main
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    homepage: https://github.com/rgoomar/aws-cct
+    description: AWS Cost Comparison Tool
+    license: MIT
+    test: |
+      system "#{bin}/aws-cct --help"
+    install: |
+      bin.install "aws-cct"
+
+release:
+  footer: >-
+    ---
+    Released by [GoReleaser](https://github.com/goreleaser/goreleaser). 
