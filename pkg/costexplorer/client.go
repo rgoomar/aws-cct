@@ -63,8 +63,12 @@ func (c *Client) GetCosts(ctx context.Context, startDate, endDate, costMetric, g
 	}
 
 	if len(expressions) > 0 {
-		input.Filter = &ceTypes.Expression{
-			And: expressions,
+		if len(expressions) == 1 {
+			input.Filter = &expressions[0]
+		} else {
+			input.Filter = &ceTypes.Expression{
+				And: expressions,
+			}
 		}
 	}
 
